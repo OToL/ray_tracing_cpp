@@ -7,7 +7,7 @@
             "environment": {
                 "CC": "/usr/local/bin/clang",
                 "CXX": "/usr/local/bin/clang++"
-            },
+           },
             "generator": "Ninja",
             "binaryDir": "build/${presetName}",
             "cacheVariables": {
