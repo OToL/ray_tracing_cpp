@@ -36,6 +36,10 @@ namespace rt {
         float squared_length() const { return (x * x + y * y + z * z); }
 
         void normalize();
+
+        static Vec3 make(float val) {
+            return Vec3{val, val, val};
+        }
     };
 
     inline Vec3 &Vec3::operator+=(Vec3 const &v) {
@@ -129,8 +133,20 @@ namespace rt {
         return Vec3(vec.x * val, vec.y * val, vec.z * val);
     }
 
+    inline Vec3 operator*(float val, const Vec3 &vec) {
+        return Vec3(vec.x * val, vec.y * val, vec.z * val);
+    }
+
+    inline Vec3 operator/(const Vec3 &vec, float val) {
+        return Vec3(vec.x / val, vec.y / val, vec.z / val);
+    }
+
     inline float dot_product(Vec3 const &lval, Vec3 const &rval) {
         return lval.x * rval.x + lval.y * rval.y + lval.z * rval.z;
+    }
+
+    inline Vec3 reflect(const Vec3& v_in, const Vec3& normal) {
+        return v_in - 2*dot_product(v_in, normal)*normal;
     }
 
     inline Vec3 cross_product(Vec3 const &lval, Vec3 const &rval) {
