@@ -166,27 +166,102 @@ enum class AntiAliasingMode : std::uint8_t
     Rand
 };
 
+
+// void build_scene()
+// {
+//     // supporting sphere
+//     add_surface({.center = rt::Vec3(0, -100.5, -1), .radius = 100}, std::make_unique<rt::Lambertian>(rt::Vec3(0.5, 0.5, 0.5)));
+//
+//     for (int offset_x = -11; offset_x < 11; ++offset_x)
+//     {
+//         for (int offset_z = -11; offset_z < 11; ++offset_z)
+//         {
+//             const float choose_mat = drand48();
+//             const rt::Vec3 sphere_center(offset_x + 0.9 * drand48(), 0.2, offset_z + 0.9 * drand48());
+//
+//             if ((sphere_center - rt::Vec3(4, 2, 0)).length() > 0.9)
+//             {
+//                 if (choose_mat < 0.8)
+//                 {
+//                     add_surface({.center = sphere_center, .radius = 0.2},
+//                                 std::make_unique<rt::Lambertian>(rt::Vec3(drand48() * drand48(), drand48() * drand48(), drand48() * drand48())));
+//                 }
+//                 else if (choose_mat < 0.95)
+//                 {
+//                     add_surface({.center = sphere_center, .radius = 0.2},
+//                                 std::make_unique<rt::Metal>(rt::Vec3(0.5 * (1 + drand48()), 0.5 * (1 + drand48()), 0.5 * (1 + drand48())))); // fuzz
+//                 }
+//                 else
+//                 {
+//                     add_surface({.center = sphere_center, .radius = 0.2}, std::make_unique<rt::Dielectric>(1.5));
+//                 }
+//             }
+//         }
+//     }
+//
+//     // big spheres
+//     add_surface({.center = rt::Vec3(0, 1, 0), .radius = 1}, std::make_unique<rt::Dielectric>(1.5));
+//     add_surface({.center = rt::Vec3(-4, 1, 0), .radius = 1}, std::make_unique<rt::Lambertian>(rt::Vec3(0.4, 0.2, 0.1)));
+//     add_surface({.center = rt::Vec3(4, 1, 0), .radius = 1}, std::make_unique<rt::Metal>(rt::Vec3(0.7, 0.6, 0.5))); // fuzz
+// }
+
+void build_scene() {
+    // supporting sphere
+    add_surface({.center = rt::Vec3(0, -1000, -1), .radius = 1000}, std::make_unique<rt::Lambertian>(rt::Vec3(0.5, 0.5, 0.5)));
+
+    for (int offset_x = -11; offset_x < 11; ++offset_x)
+    {
+        for (int offset_z = -11; offset_z < 11; ++offset_z)
+        {
+            if (drand48() > 0.5) {
+                const float choose_mat = drand48();
+                const rt::Vec3 sphere_center(offset_x + 0.9 * drand48(), 0.2, offset_z + 0.9 * drand48());
+
+                if ((sphere_center - rt::Vec3(4, 2, 0)).length() > 0.9)
+                {
+                    if (choose_mat < 0.8)
+                    {
+                        add_surface({.center = sphere_center, .radius = 0.2},
+                                std::make_unique<rt::Lambertian>(rt::Vec3(drand48() * drand48(), drand48() * drand48(), drand48() * drand48())));
+                    }
+                    else if (choose_mat < 0.95)
+                    {
+                        add_surface({.center = sphere_center, .radius = 0.2},
+                                std::make_unique<rt::Metal>(rt::Vec3(0.5 * (1 + drand48()), 0.5 * (1 + drand48()), 0.5 * (1 + drand48())))); // fuzz
+                    }
+                    else
+                    {
+                        add_surface({.center = sphere_center, .radius = 0.2}, std::make_unique<rt::Dielectric>(1.5));
+                    }
+                }
+            }
+        }
+    }
+
+    add_surface({.center = rt::Vec3(0, 1, 0), .radius = 1}, std::make_unique<rt::Dielectric>(1.5));
+    add_surface({.center = rt::Vec3(-4, 1, 0), .radius = 1}, std::make_unique<rt::Lambertian>(rt::Vec3(0.4, 0.2, 0.1)));
+    add_surface({.center = rt::Vec3(4, 1, 0), .radius = 1}, std::make_unique<rt::Metal>(rt::Vec3(0.7, 0.6, 0.5))); // fuzz
+
+}
+
 int main()
 {
     const int SCREEN_WIDTH = 800;
     const int SCREEN_HEIGHT = 400;
 
-    float const R = cos(M_PI/4);
-    // rt::Camera camera = rt::Camera::make(rt::Vec3(0, 0, 0), rt::Vec3(-2, -1, -1));
-    // rt::Camera camera = rt::Camera::make(rt::Vec3(0,0,1), 90, static_cast<float>(SCREEN_WIDTH)/SCREEN_HEIGHT);
-    rt::Camera camera = rt::Camera::make(rt::Vec3(-2,2,1), rt::Vec3(0,0,-1), rt::Vec3(0,1, 0), 90, static_cast<float>(SCREEN_WIDTH)/SCREEN_HEIGHT);
-    // rt::Camera camera = rt::Camera::make(rt::Vec3(0,0,1), rt::Vec3(0,0,-1), rt::Vec3(0,1, 0), 90, static_cast<float>(SCREEN_WIDTH)/SCREEN_HEIGHT);
+    const rt::Vec3 look_from = rt::Vec3(11, 3, 3);
+    const rt::Vec3 look_at = rt::Vec3(0, 0, -1);
 
-    // add_surface({.center = rt::Vec3(-R, 0, -1), .radius = R}, std::make_unique<rt::Lambertian>(rt::Vec3(0, 0, 1)));
-    // add_surface({.center = rt::Vec3(R, 0, -1), .radius = R}, std::make_unique<rt::Lambertian>(rt::Vec3(1, 0, 0)));
+    rt::Camera camera =
+        rt::Camera::make(look_from, 
+                look_at, 
+                rt::Vec3(0, 1, 0), 
+                30, 
+                static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT, 
+                0, 
+                1);
 
-    // supporting sphere
-    add_surface({.center = rt::Vec3(0, -100.5, -1), .radius = 100}, std::make_unique<rt::Lambertian>(rt::Vec3(0.8, 0.8, 0.0)));
-
-    add_surface({.center = rt::Vec3(0, 0, -1), .radius = 0.5}, std::make_unique<rt::Lambertian>(rt::Vec3(0.8, 0.3, 0.3)));
-    add_surface({.center = rt::Vec3(1, 0, -1), .radius = 0.5}, std::make_unique<rt::Metal>(rt::Vec3(0.8, 0.6, 0.2)));
-    add_surface({.center = rt::Vec3(-1, 0, -1), .radius = 0.5}, std::make_unique<rt::Dielectric>(1.5));
-    add_surface({.center = rt::Vec3(-1, 0, -1), .radius = -0.45}, std::make_unique<rt::Dielectric>(1.5));
+    build_scene();
 
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raytracing");
     SetTargetFPS(60);
@@ -201,7 +276,7 @@ int main()
     std::uniform_real_distribution<float> dist(0, 1);
 
     static AntiAliasingMode aa_mode = AntiAliasingMode::Rand;
-    const std::uint32_t nb_rand_samples = 15;
+    const std::uint32_t nb_rand_samples = 100;
 
     printf("camera origin %f %f %f\n", camera.origin.x, camera.origin.y, camera.origin.z);
 

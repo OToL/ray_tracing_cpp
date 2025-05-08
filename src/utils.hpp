@@ -6,6 +6,8 @@ namespace rt {
 
 rt::Vec3 get_random_point_in_unit_sphere();
 
+rt::Vec3 get_random_point_in_unit_disk();
+
 // ni: refraction index in 
 // nt: refraction index to 
 bool refract(const Vec3& v, const Vec3& normal, float ni_over_nt, Vec3& refracted);

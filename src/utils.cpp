@@ -1,21 +1,24 @@
 #include "utils.hpp"
 
-#include <random>
 
 // rejection implementation i.e. we generate random point in a cube until it fits in unit sphere
 rt::Vec3 rt::get_random_point_in_unit_sphere()
 {
-    static std::mt19937 rd(42);
-    static std::uniform_real_distribution<float> dist(-1, 1);
-
     rt::Vec3 res;
-    do
-    {
-        res.x = dist(rd);
-        res.y = dist(rd);
-        res.z = dist(rd);
+    do {
+        res = 2 * rt::Vec3(drand48(), drand48(), drand48()) - rt::Vec3(1,1,1);
+    } while(rt::dot_product(res, res) >= 1);
 
-    } while (rt::dot_product(res, res) > 1);
+
+    return res;
+}
+
+rt::Vec3 rt::get_random_point_in_unit_disk() {
+    rt::Vec3 res;
+
+    do {
+        res = 2 * rt::Vec3(drand48(), drand48(), 0) - rt::Vec3(1,1,0);
+    } while(rt::dot_product(res, res) >= 1);
 
     return res;
 }
