@@ -7,11 +7,30 @@
             "environment": {
                 "CC": "/usr/local/bin/clang",
                 "CXX": "/usr/local/bin/clang++"
-           },
+            },
             "generator": "Ninja",
             "binaryDir": "build/${presetName}",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Darwin"
+            }
+        },
+        {
+            "name": "macos-release",
+            "displayName": "macOS Release",
+            "environment": {
+                "CC": "/usr/local/bin/clang",
+                "CXX": "/usr/local/bin/clang++"
+            },
+            "generator": "Ninja",
+            "binaryDir": "build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "1"
             },
             "condition": {

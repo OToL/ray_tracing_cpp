@@ -21,11 +21,7 @@ rt::Vec3 get_sky_color(const rt::Ray & r)
 {
     const rt::Vec3 unit_dir = rt::normalize_vec(r.dir);
     const float t = 0.5 * (unit_dir.y + 1.f);
-
-    // interpolation from white to light blue
-    // (light_blue - white) * t + white
-    // light_blue*t + white * (1-t)
-    return rt::Vec3(1.f, 1.f, 1.f) * (1.f - t) + rt::Vec3(0.5, 0.7, 1.0) * t;
+    return (1.f - t) * rt::Vec3(1.f, 1.f, 1.f) + t * rt::Vec3(0.5, 0.7, 1.0);
 }
 
 struct Surface
@@ -103,14 +99,11 @@ bool hit_world(const rt::Ray & r, float min_t, float max_t, rt::Hit & hit)
             case Surface::Sphere:
             {
                 rt::Hit local_hit;
-                if (hit_sphere(r, min_t, max_t, g_spheres[surface.id], local_hit))
+                if (hit_sphere(r, min_t, hit.t, g_spheres[surface.id], local_hit))
                 {
                     has_hit = true;
-                    if (local_hit.t < hit.t)
-                    {
-                        hit = local_hit;
-                        hit.material = surface.material.get();
-                    }
+                    hit = local_hit;
+                    hit.material = surface.material.get();
                 }
 
                 break;
@@ -166,46 +159,8 @@ enum class AntiAliasingMode : std::uint8_t
     Rand
 };
 
-
-// void build_scene()
-// {
-//     // supporting sphere
-//     add_surface({.center = rt::Vec3(0, -100.5, -1), .radius = 100}, std::make_unique<rt::Lambertian>(rt::Vec3(0.5, 0.5, 0.5)));
-//
-//     for (int offset_x = -11; offset_x < 11; ++offset_x)
-//     {
-//         for (int offset_z = -11; offset_z < 11; ++offset_z)
-//         {
-//             const float choose_mat = drand48();
-//             const rt::Vec3 sphere_center(offset_x + 0.9 * drand48(), 0.2, offset_z + 0.9 * drand48());
-//
-//             if ((sphere_center - rt::Vec3(4, 2, 0)).length() > 0.9)
-//             {
-//                 if (choose_mat < 0.8)
-//                 {
-//                     add_surface({.center = sphere_center, .radius = 0.2},
-//                                 std::make_unique<rt::Lambertian>(rt::Vec3(drand48() * drand48(), drand48() * drand48(), drand48() * drand48())));
-//                 }
-//                 else if (choose_mat < 0.95)
-//                 {
-//                     add_surface({.center = sphere_center, .radius = 0.2},
-//                                 std::make_unique<rt::Metal>(rt::Vec3(0.5 * (1 + drand48()), 0.5 * (1 + drand48()), 0.5 * (1 + drand48())))); // fuzz
-//                 }
-//                 else
-//                 {
-//                     add_surface({.center = sphere_center, .radius = 0.2}, std::make_unique<rt::Dielectric>(1.5));
-//                 }
-//             }
-//         }
-//     }
-//
-//     // big spheres
-//     add_surface({.center = rt::Vec3(0, 1, 0), .radius = 1}, std::make_unique<rt::Dielectric>(1.5));
-//     add_surface({.center = rt::Vec3(-4, 1, 0), .radius = 1}, std::make_unique<rt::Lambertian>(rt::Vec3(0.4, 0.2, 0.1)));
-//     add_surface({.center = rt::Vec3(4, 1, 0), .radius = 1}, std::make_unique<rt::Metal>(rt::Vec3(0.7, 0.6, 0.5))); // fuzz
-// }
-
-void build_scene() {
+void build_scene()
+{
     // supporting sphere
     add_surface({.center = rt::Vec3(0, -1000, -1), .radius = 1000}, std::make_unique<rt::Lambertian>(rt::Vec3(0.5, 0.5, 0.5)));
 
@@ -241,7 +196,6 @@ void build_scene() {
     add_surface({.center = rt::Vec3(0, 1, 0), .radius = 1}, std::make_unique<rt::Dielectric>(1.5));
     add_surface({.center = rt::Vec3(-4, 1, 0), .radius = 1}, std::make_unique<rt::Lambertian>(rt::Vec3(0.4, 0.2, 0.1)));
     add_surface({.center = rt::Vec3(4, 1, 0), .radius = 1}, std::make_unique<rt::Metal>(rt::Vec3(0.7, 0.6, 0.5))); // fuzz
-
 }
 
 int main()
@@ -251,15 +205,9 @@ int main()
 
     const rt::Vec3 look_from = rt::Vec3(11, 3, 3);
     const rt::Vec3 look_at = rt::Vec3(0, 0, -1);
+    const float min_ray_distnace = 0.001;
 
-    rt::Camera camera =
-        rt::Camera::make(look_from, 
-                look_at, 
-                rt::Vec3(0, 1, 0), 
-                30, 
-                static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT, 
-                0, 
-                1);
+    rt::Camera camera = rt::Camera::make(look_from, look_at, rt::Vec3(0, 1, 0), 30, static_cast<float>(SCREEN_WIDTH) / SCREEN_HEIGHT, 0, 1);
 
     build_scene();
 
@@ -276,7 +224,7 @@ int main()
     std::uniform_real_distribution<float> dist(0, 1);
 
     static AntiAliasingMode aa_mode = AntiAliasingMode::Rand;
-    const std::uint32_t nb_rand_samples = 100;
+    const std::uint32_t nb_rand_samples = 50;
 
     printf("camera origin %f %f %f\n", camera.origin.x, camera.origin.y, camera.origin.z);
 
@@ -295,7 +243,7 @@ int main()
                 const float v = static_cast<float>(SCREEN_HEIGHT - row_idx - 1) / (SCREEN_HEIGHT - 1);
 
                 rt::Ray my_ray = camera.get_ray(u, v);
-                hit_color += get_hit_world_color(my_ray, 0.00001, std::numeric_limits<float>::max());
+                hit_color += get_hit_world_color(my_ray, min_ray_distnace, std::numeric_limits<float>::max());
             }
             else if (aa_mode == AntiAliasingMode::Rand)
             {
@@ -305,7 +253,7 @@ int main()
                     const float v = static_cast<float>(SCREEN_HEIGHT - row_idx + dist(rd) - 1) / (SCREEN_HEIGHT - 1);
 
                     rt::Ray my_ray = camera.get_ray(u, v);
-                    hit_color += get_hit_world_color(my_ray, 0.00001, std::numeric_limits<float>::max());
+                    hit_color += get_hit_world_color(my_ray, min_ray_distnace, std::numeric_limits<float>::max());
                 }
 
                 hit_color /= nb_rand_samples;
@@ -320,7 +268,7 @@ int main()
                         const float v = static_cast<float>(SCREEN_HEIGHT - row_idx + offset_v - 1) / (SCREEN_HEIGHT - 1);
 
                         rt::Ray my_ray = camera.get_ray(u, v);
-                        hit_color += get_hit_world_color(my_ray, 0.00001, std::numeric_limits<float>::max());
+                        hit_color += get_hit_world_color(my_ray, min_ray_distnace, std::numeric_limits<float>::max());
                     }
                 }
 
